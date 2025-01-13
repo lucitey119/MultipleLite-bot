@@ -37,8 +37,8 @@ Pastikan Anda telah menginstal Python3.9 dan PIP.
 - **accounts.txt:** Anda akan menemukan file `accounts.txt` di dalam direktori proyek. Pastikan `accounts.txt` berisi data yang sesuai dengan format yang diharapkan oleh skrip. Berikut adalah contoh format file:
 
   ```bash
-    eyjxxxxx1
-    eyjxxxxx2
+    your_private_key_1
+    your_private_key_2
   ```
 - **manual_proxy.txt:** Anda akan menemukan file `manual_proxy.txt` di dalam direktori proyek. Pastikan `manual_proxy.txt` berisi data yang sesuai dengan format yang diharapkan oleh skrip. Berikut adalah contoh format file:
   ```bash
