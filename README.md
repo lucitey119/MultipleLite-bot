@@ -1,25 +1,26 @@
 # Multiple Lite Node BOT
 Multiple Lite Node BOT
 
-- Register Here : [Multiple Lite Node](https://www.app.multiple.cc/#/signup?inviteCode=2GEg01qD) | Use Code : 2GEg01qD
+- Register Here : [Multiple Lite Node](https://www.app.multiple.cc/#/signup?inviteCode=2GEg01qD)
 - Download Extension Here: [Multiple Lite Node Extension](https://chromewebstore.google.com/detail/multiple-lite-node/ciljbjmmdhnhgbihlcohoadafmhikgib)
+- Use Code : 2GEg01qD
 
-## Fitur
+## Features
 
   - Auto Get Account Information
-  - Auto Run With Auto Proxy if u Choose 1 [Use [Monosans Proxy](https://raw.githubusercontent.com/monosans/proxy-list/main/proxies/all.txt)]
-  - Auto Run With Manual Proxy if u Choose 2 [Paste Ur personal proxy in manual_proxy.txt]
-  - Auto Run Without Proxy if u Choose 3
+  - Auto Run With [Monosans](https://raw.githubusercontent.com/monosans/proxy-list/main/proxies/all.txt) Proxy - Choose 1
+  - Auto Run With Private Proxy - Choose 2
+  - Auto Run Without Proxy - Choose 3
   - Auto Send Keep Alive Every 10 Minutes
   - Multi Accounts With Threads
 
-## Prasyarat
+## Requiremnets
 
-Pastikan Anda telah menginstal Python3.9 dan PIP.
+- Make sure you have Python3.9 or higher installed and pip.
 
-## Instalasi
+## Instalation
 
-1. **Kloning repositori:**
+1. **Clone The Repositories:**
    ```bash
    git clone https://github.com/vonssy/MultipleLite-BOT.git
    ```
@@ -27,20 +28,20 @@ Pastikan Anda telah menginstal Python3.9 dan PIP.
    cd MultipleLite-BOT
    ```
 
-2. **Instal Requirements:**
+2. **Install Requirements:**
    ```bash
    pip install -r requirements.txt #or pip3 install -r requirements.txt
    ```
 
-## Konfigurasi
+## Configuration
 
-- **accounts.txt:** Anda akan menemukan file `accounts.txt` di dalam direktori proyek. Pastikan `accounts.txt` berisi data yang sesuai dengan format yang diharapkan oleh skrip. Berikut adalah contoh format file:
+- **accounts.txt:** You will find the file `accounts.txt` inside the project directory. Make sure `accounts.txt` contains data that matches the format expected by the script. Here are examples of file formats:
 
   ```bash
     your_private_key_1
     your_private_key_2
   ```
-- **manual_proxy.txt:** Anda akan menemukan file `manual_proxy.txt` di dalam direktori proyek. Pastikan `manual_proxy.txt` berisi data yang sesuai dengan format yang diharapkan oleh skrip. Berikut adalah contoh format file:
+- **proxy.txt:** You will find the file `proxy.txt` inside the project directory. Make sure `proxy.txt` contains data that matches the format expected by the script. Here are examples of file formats:
   ```bash
     ip:port # Default Protcol HTTP.
     protocol://ip:port
@@ -53,9 +54,14 @@ Pastikan Anda telah menginstal Python3.9 dan PIP.
 python bot.py #or python3 bot.py
 ```
 
-## Penutup
+## Buy Me a Coffee
 
-Terima kasih telah mengunjungi repository ini, jangan lupa untuk memberikan kontribusi berupa follow dan stars.
-Jika Anda memiliki pertanyaan, menemukan masalah, atau memiliki saran untuk perbaikan, jangan ragu untuk menghubungi saya atau membuka *issue* di repositori GitHub ini.
+- **EVM:** 0xe3c9ef9a39e9eb0582e5b147026cae524338521a
+- **TON:** UQBEFv58DC4FUrGqinBB5PAQS7TzXSm5c1Fn6nkiet8kmehB
+- **SOL:** E1xkaJYmAFEj28NPHKhjbf7GcvfdjKdvXju8d8AeSunf
+- **SUI:** 0xa03726ecbbe00b31df6a61d7a59d02a7eedc39fe269532ceab97852a04cf3347
+
+Thank you for visiting this repository, don't forget to contribute in the form of follows and stars.
+If you have questions, find an issue, or have suggestions for improvement, feel free to contact me or open an *issue* in this GitHub repository.
 
 **vonssy**
