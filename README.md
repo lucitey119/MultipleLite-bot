@@ -48,7 +48,7 @@ Multiple Lite Node BOT
     protocol://user:pass@ip:port
   ```
 
-## Jalankan
+## Run
 
 ```bash
 python bot.py #or python3 bot.py
