@@ -296,10 +296,9 @@ class MultipleLite:
                 if attempt < retries - 1:
                     await asyncio.sleep(5)
                     continue
-
-                self.print_message(address, proxy, Fore.RED, f"PING Failed {Fore.YELLOW+Style.BRIGHT}{str(e)}")
+                
                 proxy = self.rotate_proxy_for_account(account) if use_proxy else None
-                return None
+                return self.print_message(address, proxy, Fore.RED, f"PING Failed {Fore.YELLOW+Style.BRIGHT}{str(e)}")
             
     async def get_user_information(self, account: str, address: str, extension_token: str, use_proxy: bool):
         while True:
@@ -332,7 +331,7 @@ class MultipleLite:
             )
             
             ping = await self.send_keepalive(account, address, extension_token, use_proxy, proxy)
-            if "success" in ping and ping['success']:
+            if ping:
                 self.print_message(address, proxy, Fore.GREEN, "PING Success")
 
             print(
