@@ -50,6 +50,14 @@ class MultipleLite:
         hours, remainder = divmod(seconds, 3600)
         minutes, seconds = divmod(remainder, 60)
         return f"{int(hours):02}:{int(minutes):02}:{int(seconds):02}"
+
+    def format_time(self, seconds):
+        days = seconds // 86400
+        seconds %= 86400
+        hours = seconds // 3600
+        seconds %= 3600
+        minutes = seconds // 60
+        return f"{days}d {hours}h {minutes}m"
     
     def load_accounts(self):
         filename = "accounts.json"
@@ -304,17 +312,17 @@ class MultipleLite:
         while True:
             proxy = self.get_next_proxy_for_account(account) if use_proxy else None
             user = await self.user_information(account, address, extension_token, use_proxy, proxy)
+            
             if user:
                 runing_time = user['totalRunningTime']
                 is_online = user['isOnline']
                 status = "Node Connected" if is_online else "Node Disconnected"
-                formatted_time = self.format_seconds(runing_time)
 
                 self.print_message(address, proxy, Fore.GREEN if is_online else Fore.RED,
                     f"{status} "
                     f"{Fore.MAGENTA + Style.BRIGHT}-{Style.RESET_ALL}"
                     f"{Fore.CYAN + Style.BRIGHT} Run Time: {Style.RESET_ALL}"
-                    f"{Fore.WHITE + Style.BRIGHT}{formatted_time}{Style.RESET_ALL}"
+                    f"{Fore.WHITE + Style.BRIGHT}{self.format_time(runing_time)}{Style.RESET_ALL}"
                 )
 
             await asyncio.sleep(11 * 60)
@@ -370,8 +378,7 @@ class MultipleLite:
             self.print_message(address, proxy, Fore.GREEN, "GET Extension Token Success")
             return extension_token
         
-    async def process_accounts(self, account: str, use_proxy: bool):
-        address = self.generate_address(account)
+    async def process_accounts(self, account: str, address: str, use_proxy: bool):
         dashboard_token = await self.get_dashboard_token(account, address, use_proxy)
         if dashboard_token:
             extension_token = await self.get_extension_token(account, address, dashboard_token, use_proxy)
@@ -409,11 +416,15 @@ class MultipleLite:
                 tasks = []
                 for account in accounts:
                     if account:
-                        tasks.append(self.process_accounts(account, use_proxy))
+                        address = self.generate_address(account)
+                        tasks.append(self.process_accounts(account, address, use_proxy))
 
                 await asyncio.gather(*tasks)
                 await asyncio.sleep(10)
 
+        except FileNotFoundError as e:
+            self.log(f"{Fore.RED+Style.BRIGHT}File 'accounts.txt' Not Found.{Style.RESET_ALL}")
+            return
         except Exception as e:
             self.log(f"{Fore.RED+Style.BRIGHT}Error: {e}{Style.RESET_ALL}")
 
