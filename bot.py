@@ -9,7 +9,10 @@ from eth_account.messages import encode_defunct
 from fake_useragent import FakeUserAgent
 from datetime import datetime
 from colorama import *
-import asyncio, json, random, os, pytz
+import asyncio, json, random, os, pytz, importlib
+
+# Import the extension module which contains only the token variable
+import extension
 
 wib = pytz.timezone('Asia/Jakarta')
 
@@ -132,25 +135,22 @@ class MultipleLite:
         try:
             account = Account.from_key(private_key)
             address = account.address
-            
             return address
         except Exception as e:
             return None
     
     def generate_payload_data(self, account: str, address: str, timestamp: str, nonce: int):
         try:
-            message = f"www.multiple.cc wants you to sign in with your Ethereum account: {address}\n\t     \nmessage:\nwebsite: www.multiple.cc\nwalletaddress: {address}\ntimestamp: {timestamp}\nNonce: {nonce}"
+            message = (f"www.multiple.cc wants you to sign in with your Ethereum account: {address}\n\t     \n"
+                       f"message:\nwebsite: www.multiple.cc\nwalletaddress: {address}\ntimestamp: {timestamp}\nNonce: {nonce}")
             encoded_message = encode_defunct(text=message)
-
             signed_message = Account.sign_message(encoded_message, private_key=account)
             signature = signed_message.signature.hex()
-
             data = {
                 "walletAddr": address,
                 "message": message,
                 "signature": signature
             }
-
             return data
         except Exception as e:
             return None
@@ -179,7 +179,6 @@ class MultipleLite:
                 print("2. Run With Private Proxy")
                 print("3. Run Without Proxy")
                 choose = int(input("Choose [1/2/3] -> ").strip())
-
                 if choose in [1, 2, 3]:
                     proxy_type = (
                         "Run With Monosans Proxy" if choose == 1 else 
@@ -219,39 +218,8 @@ class MultipleLite:
                     nonce = int(timestamp.timestamp() * 1000)
                     await asyncio.sleep(5)
                     continue
-
                 return self.print_message(address, proxy, Fore.RED, f"GET Dashboard Token Failed {Fore.YELLOW+Style.BRIGHT}{str(e)}")
 
-    async def extension_login(self, account: str, address: str, dashboard_token: str, use_proxy: bool, proxy=None, retries=5):
-        url = "https://api.app.multiple.cc/ChromePlugin/Login"
-        headers = {
-            **self.headers,
-            "Authorization": f"Bearer {dashboard_token}",
-            "Content-Length": '2',
-            "Content-Type": "application/json",
-            "Origin": "chrome-extension://ciljbjmmdhnhgbihlcohoadafmhikgib",
-            "Sec-Fetch-Site": "none",
-        }
-        for attempt in range(retries):
-            connector = ProxyConnector.from_url(proxy) if proxy else None
-            try:
-                async with ClientSession(connector=connector, timeout=ClientTimeout(total=60)) as session:
-                    async with session.post(url=url, headers=headers, json={}) as response:
-                        if response.status == 401:
-                            dashboard_token = await self.get_dashboard_token(account, address, use_proxy)
-                            headers["Authorization"] = f"Bearer {dashboard_token}"
-                            continue
-                            
-                        response.raise_for_status()
-                        result = await response.json()
-                        return result['data']['token']
-            except (Exception, ClientResponseError) as e:
-                if attempt < retries - 1:
-                    await asyncio.sleep(5)
-                    continue
-
-                return self.print_message(address, proxy, Fore.RED, f"GET Extension Token Failed {Fore.YELLOW+Style.BRIGHT}{str(e)}")
-        
     async def user_information(self, account: str, address: str, extension_token: str, use_proxy: bool, proxy=None, retries=5):
         url = "https://api.app.multiple.cc/ChromePlugin/GetInformation"
         headers = {
@@ -264,10 +232,11 @@ class MultipleLite:
                 async with ClientSession(connector=connector, timeout=ClientTimeout(total=60)) as session:
                     async with session.get(url=url, headers=headers) as response:
                         if response.status == 401:
-                            dashboard_token = await self.get_extension_token(account, address, dashboard_token, use_proxy)
+                            # Reload the token from extension.py if unauthorized
+                            importlib.reload(extension)
+                            extension_token = extension.EXTENSION_TOKEN
                             headers["Authorization"] = f"Bearer {extension_token}"
                             continue
-
                         response.raise_for_status()
                         result = await response.json()
                         return result['data']
@@ -275,7 +244,6 @@ class MultipleLite:
                 if attempt < retries - 1:
                     await asyncio.sleep(5)
                     continue
-
                 return self.print_message(address, proxy, Fore.RED, f"GET User Info Failed {Fore.YELLOW+Style.BRIGHT}{str(e)}")
                 
     async def send_keepalive(self, account: str, address: str, extension_token: str, use_proxy: bool, proxy=None, retries=5):
@@ -294,17 +262,17 @@ class MultipleLite:
                 async with ClientSession(connector=connector, timeout=ClientTimeout(total=60)) as session:
                     async with session.post(url=url, headers=headers) as response:
                         if response.status == 401:
-                            dashboard_token = await self.get_extension_token(account, address, dashboard_token, use_proxy)
+                            # Reload token on 401
+                            importlib.reload(extension)
+                            extension_token = extension.EXTENSION_TOKEN
                             headers["Authorization"] = f"Bearer {extension_token}"
                             continue
-
                         response.raise_for_status()
                         return await response.json()
             except (Exception, ClientResponseError) as e:
                 if attempt < retries - 1:
                     await asyncio.sleep(5)
                     continue
-                
                 proxy = self.rotate_proxy_for_account(account) if use_proxy else None
                 return self.print_message(address, proxy, Fore.RED, f"PING Failed {Fore.YELLOW+Style.BRIGHT}{str(e)}")
             
@@ -312,19 +280,16 @@ class MultipleLite:
         while True:
             proxy = self.get_next_proxy_for_account(account) if use_proxy else None
             user = await self.user_information(account, address, extension_token, use_proxy, proxy)
-            
             if user:
                 runing_time = user['totalRunningTime']
                 is_online = user['isOnline']
                 status = "Node Connected" if is_online else "Node Disconnected"
-
                 self.print_message(address, proxy, Fore.GREEN if is_online else Fore.RED,
                     f"{status} "
                     f"{Fore.MAGENTA + Style.BRIGHT}-{Style.RESET_ALL}"
                     f"{Fore.CYAN + Style.BRIGHT} Run Time: {Style.RESET_ALL}"
                     f"{Fore.WHITE + Style.BRIGHT}{self.format_time(runing_time)}{Style.RESET_ALL}"
                 )
-
             await asyncio.sleep(11 * 60)
 
     async def process_send_ping(self, account: str, address: str, extension_token: str, use_proxy: bool):
@@ -337,11 +302,9 @@ class MultipleLite:
                 end="\r",
                 flush=True
             )
-            
             ping = await self.send_keepalive(account, address, extension_token, use_proxy, proxy)
             if ping:
                 self.print_message(address, proxy, Fore.GREEN, "PING Success")
-
             print(
                 f"{Fore.CYAN + Style.BRIGHT}[ {datetime.now().astimezone(wib).strftime('%x %X %Z')} ]{Style.RESET_ALL}"
                 f"{Fore.WHITE + Style.BRIGHT} | {Style.RESET_ALL}"
@@ -349,7 +312,6 @@ class MultipleLite:
                 end="\r",
                 flush=True
             )
-
             await asyncio.sleep(10 * 60)
 
     async def get_dashboard_token(self, account: str, address: str, use_proxy: bool):
@@ -362,28 +324,25 @@ class MultipleLite:
             if not dashboard_token:
                 proxy = self.rotate_proxy_for_account(account) if use_proxy else None
                 continue
-        
             self.print_message(address, proxy, Fore.GREEN, "GET Dashboard Token Success")
             return dashboard_token
 
     async def get_extension_token(self, account: str, address: str, dashboard_token: str, use_proxy: bool):
-        proxy = self.get_next_proxy_for_account(account) if use_proxy else None
-        extension_token = None
-        while extension_token is None:
-            extension_token = await self.extension_login(account, address, dashboard_token, use_proxy, proxy)
-            if not extension_token:
-                proxy = self.rotate_proxy_for_account(account) if use_proxy else None
-                continue
-        
-            self.print_message(address, proxy, Fore.GREEN, "GET Extension Token Success")
+        try:
+            # Reload extension.py to get the token value
+            importlib.reload(extension)
+            extension_token = extension.EXTENSION_TOKEN
+            self.print_message(address, None, Fore.GREEN, "GET Extension Token Loaded from extension.py")
             return extension_token
+        except Exception as e:
+            self.print_message(address, None, Fore.RED, f"Failed to load extension token: {e}")
+            return None
         
     async def process_accounts(self, account: str, address: str, use_proxy: bool):
         dashboard_token = await self.get_dashboard_token(account, address, use_proxy)
         if dashboard_token:
             extension_token = await self.get_extension_token(account, address, dashboard_token, use_proxy)
             if extension_token:
-                
                 tasks = []
                 tasks.append(self.get_user_information(account, address, extension_token, use_proxy))
                 tasks.append(self.process_send_ping(account, address, extension_token, use_proxy))
@@ -393,35 +352,27 @@ class MultipleLite:
         try:
             with open('accounts.txt', 'r') as file:
                 accounts = [line.strip() for line in file if line.strip()]
-            
             use_proxy_choice = self.print_question()
-
             use_proxy = False
             if use_proxy_choice in [1, 2]:
                 use_proxy = True
-
             self.clear_terminal()
             self.welcome()
             self.log(
                 f"{Fore.GREEN + Style.BRIGHT}Account's Total: {Style.RESET_ALL}"
                 f"{Fore.WHITE + Style.BRIGHT}{len(accounts)}{Style.RESET_ALL}"
             )
-
             if use_proxy:
                 await self.load_proxies(use_proxy_choice)
-
             self.log(f"{Fore.CYAN + Style.BRIGHT}-{Style.RESET_ALL}"*75)
-
             while True:
                 tasks = []
                 for account in accounts:
                     if account:
                         address = self.generate_address(account)
                         tasks.append(self.process_accounts(account, address, use_proxy))
-
                 await asyncio.gather(*tasks)
                 await asyncio.sleep(10)
-
         except FileNotFoundError as e:
             self.log(f"{Fore.RED+Style.BRIGHT}File 'accounts.txt' Not Found.{Style.RESET_ALL}")
             return
@@ -436,5 +387,5 @@ if __name__ == "__main__":
         print(
             f"{Fore.CYAN + Style.BRIGHT}[ {datetime.now().astimezone(wib).strftime('%x %X %Z')} ]{Style.RESET_ALL}"
             f"{Fore.WHITE + Style.BRIGHT} | {Style.RESET_ALL}"
-            f"{Fore.RED + Style.BRIGHT}[ EXIT ] Multiple Lite Node - BOT{Style.RESET_ALL}                                       "                              
+            f"{Fore.RED + Style.BRIGHT}[ EXIT ] Multiple Lite Node - BOT{Style.RESET_ALL}                                       "
         )
